@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>楼花转让计算器 | Assignment Calculator</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap');
+
+  :root {
+    --bg: #f0f4f8;
+    --surface: #ffffff;
+    --surface2: #f7fafc;
+    --border: #dde5ef;
+    --border-mid: #b8c9db;
+    --border-bright: #0077b6;
+    --text: #0d1b2a;
+    --text-muted: #4a6080;
+    --text-hint: #8fa3b8;
+    --accent: #0077b6;
+    --accent-light: #e8f4fb;
+    --accent-mid: #0096c7;
+    --amber: #b06000;
+    --amber-dim: #fff8ec;
+    --amber-border: #f0c06a;
+    --danger: #c0392b;
+    --danger-dim: #fef0ee;
+    --success: #0a7c59;
+    --success-dim: #eafaf4;
+    --radius: 10px;
+    --radius-sm: 6px;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Inter', -apple-system, "PingFang SC", sans-serif;
+    --shadow: 0 1px 3px rgba(0,60,120,0.07), 0 1px 2px rgba(0,60,120,0.04);
+    --shadow-md: 0 4px 12px rgba(0,60,120,0.09);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    background-image:
+      linear-gradient(rgba(0,119,182,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,119,182,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    color: var(--text);
+    min-height: 100vh; padding: 0 0 80px;
+  }
+
+  /* ── Header ── */
+  header {
+    background: linear-gradient(135deg, #023e6e 0%, #0077b6 100%);
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+    padding: 20px 24px 18px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: relative; overflow: hidden; box-shadow: var(--shadow-md);
+  }
+  header::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+  }
+  .header-badge { display: flex; align-items: center; gap: 10px; }
+  .header-icon {
+    width: 36px; height: 36px; border-radius: 8px;
+    background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.25);
+    display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;
+  }
+  header h1 { font-size: 17px; font-weight: 600; color: #fff; letter-spacing: -0.2px; margin-bottom: 2px; }
+  header p { font-size: 11px; color: rgba(255,255,255,0.65); letter-spacing: 0.03em; }
+  .header-controls { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+  .lang-toggle {
+    background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);
+    color: #fff; border-radius: 20px; padding: 5px 14px;
+    font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap;
+    font-family: var(--sans); transition: all .15s; letter-spacing: 0.03em;
+  }
+  .lang-toggle:hover { background: rgba(255,255,255,0.28); }
+
+  /* ── Container & Cards ── */
+  .container { max-width: 840px; margin: 0 auto; padding: 0 16px; }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 18px 20px; margin-top: 14px;
+    box-shadow: var(--shadow); position: relative;
+  }
+  .card-title {
+    font-size: 10px; font-weight: 600; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--accent); margin-bottom: 14px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .card-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media(max-width: 500px) { .grid-2 { grid-template-columns: 1fr; } }
+
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field label { font-size: 11px; color: var(--text-muted); font-weight: 500; letter-spacing: 0.03em; }
+  .field input, .field select {
+    height: 40px; padding: 0 12px;
+    border: 1px solid var(--border-mid); border-radius: var(--radius-sm);
+    font-size: 14px; font-family: var(--mono);
+    color: var(--text); background: var(--surface2);
+    transition: border-color .15s, box-shadow .15s;
+    -webkit-appearance: none; appearance: none;
+  }
+  .field select {
+    font-family: var(--sans);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%230077b6' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px;
+  }
+  .field input:focus, .field select:focus {
+    outline: none; border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(0,119,182,0.12);
+  }
+  .field input::placeholder { color: var(--text-hint); }
+  .field input::-webkit-outer-spin-button,
+  .field input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+  .loan-params {
+    display: flex; gap: 6px; align-items: center;
+    padding: 8px 12px; background: var(--accent-light);
+    border: 1px solid #c5dff0; border-radius: var(--radius-sm);
+    margin-top: 12px; flex-wrap: wrap;
+  }
+  .loan-params span { font-size: 11px; color: var(--text-muted); }
+  .loan-params strong { font-family: var(--mono); color: var(--accent); font-size: 12px; }
+  .loan-params .sep { color: var(--border-mid); }
+
+  /* ── Summary stats ── */
+  .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; }
+  .stat {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 12px 14px;
+    position: relative; overflow: hidden;
+  }
+  .stat::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+    background: var(--accent);
+  }
+  .stat-label { font-size: 10px; color: var(--text-hint); margin-bottom: 6px; letter-spacing: 0.04em; text-transform: uppercase; }
+  .stat-val { font-size: 17px; font-weight: 600; color: var(--text); font-family: var(--mono); }
+  .stat-val.neg { color: var(--danger); }
+
+  /* ── Section heads ── */
+  .section-head { display: flex; align-items: center; gap: 10px; margin: 20px 0 10px; }
+  .section-head h2 { font-size: 11px; font-weight: 600; color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase; }
+  .tag { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px; letter-spacing: 0.03em; }
+  .tag-blue { background: var(--accent-light); color: var(--accent); border: 1px solid #c5dff0; }
+  .tag-amber { background: var(--amber-dim); color: var(--amber); border: 1px solid var(--amber-border); }
+
+  /* ── Scenario cards ── */
+  .scenario-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media(max-width: 420px) { .scenario-grid { grid-template-columns: 1fr; } }
+
+  .scenario-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow);
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .scenario-card:hover { border-color: var(--border-bright); box-shadow: var(--shadow-md); }
+  .scenario-card h3 {
+    font-size: 11px; font-weight: 600; color: var(--accent);
+    margin-bottom: 12px; padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    letter-spacing: 0.04em; text-transform: uppercase;
+  }
+  .row {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 5px 0; border-bottom: 1px solid var(--bg);
+  }
+  .row:last-child {
+    border-bottom: none; padding-top: 9px; margin-top: 3px;
+    border-top: 1px solid var(--border);
+  }
+  .row-key { font-size: 11px; color: var(--text-muted); }
+  .row-val { font-size: 13px; font-weight: 600; color: var(--text); font-family: var(--mono); }
+  .row-val.big { font-size: 15px; color: var(--accent); }
+  .row-val.neg { color: var(--danger) !important; }
+  .row-val.pos { color: var(--success); }
+
+  /* ── Save bar ── */
+  .save-bar { display: flex; gap: 10px; align-items: center; margin-top: 16px; }
+  .save-bar input {
+    flex: 1; height: 40px; padding: 0 12px;
+    border: 1px solid var(--border-mid); border-radius: var(--radius-sm);
+    font-size: 13px; font-family: var(--sans); color: var(--text); background: var(--surface);
+  }
+  .save-bar input::placeholder { color: var(--text-hint); }
+  .save-bar input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,119,182,0.12); }
+  .btn-save {
+    height: 40px; padding: 0 18px;
+    background: linear-gradient(135deg, #0077b6, #0096c7);
+    color: #fff; border: none; border-radius: var(--radius-sm);
+    font-size: 13px; font-weight: 600; font-family: var(--sans);
+    cursor: pointer; white-space: nowrap; transition: opacity .15s, transform .1s;
+    letter-spacing: 0.02em; box-shadow: 0 2px 8px rgba(0,119,182,0.25);
+  }
+  .btn-save:hover { opacity: 0.88; }
+  .btn-save:active { transform: scale(0.98); }
+
+  /* ── Compare table ── */
+  #compare-section { display: none; margin-top: 24px; }
+  .compare-wrap { overflow-x: auto; margin-top: 10px; border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); }
+  .compare-table {
+    width: 100%; border-collapse: collapse; font-size: 12px;
+    background: var(--surface); min-width: 700px;
+  }
+  .compare-table thead tr { background: linear-gradient(135deg, #023e6e, #0077b6); }
+  .compare-table thead th {
+    padding: 10px 11px; text-align: left; font-weight: 600;
+    font-size: 10px; letter-spacing: .06em; white-space: nowrap;
+    color: rgba(255,255,255,0.85); text-transform: uppercase;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+  .compare-table tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+  .compare-table tbody tr:last-child { border-bottom: none; }
+  .compare-table tbody tr:hover { background: var(--accent-light); }
+  .compare-table td { padding: 9px 11px; vertical-align: middle; white-space: nowrap; color: var(--text-muted); font-family: var(--mono); font-size: 11px; }
+  .compare-table td.label-col { font-weight: 600; color: var(--text); font-family: var(--sans); font-size: 12px; }
+  .compare-table td.neg { color: var(--danger); font-weight: 600; }
+  .compare-table td.pos { color: var(--success); font-weight: 600; }
+  .btn-del {
+    background: none; border: none; cursor: pointer;
+    color: var(--text-hint); font-size: 13px; padding: 2px 6px;
+    border-radius: 4px; transition: color .15s, background .15s;
+  }
+  .btn-del:hover { color: var(--danger); background: var(--danger-dim); }
+  .empty-compare { text-align: center; padding: 32px 16px; color: var(--text-hint); font-size: 13px; }
+
+  /* ── Status bar ── */
+  .status-bar {
+    font-size: 11px; color: var(--text-hint); margin-top: 8px;
+    min-height: 18px; display: flex; align-items: center; gap: 6px; font-family: var(--mono);
+  }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-hint); display: inline-block; flex-shrink: 0; }
+  .dot.green { background: var(--success); }
+  .dot.red { background: var(--danger); }
+
+  #results { display: none; }
+  #summary-section { display: none; }
+  #save-bar-wrap { display: none; }
+
+  /* ── Auth modal ── */
+  .modal-backdrop {
+    position: fixed; inset: 0; z-index: 100;
+    background: rgba(2,30,60,0.55); backdrop-filter: blur(4px);
+    display: flex; align-items: center; justify-content: center; padding: 16px;
+  }
+  .modal-backdrop.hidden { display: none; }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); box-shadow: var(--shadow-md);
+    padding: 32px 28px; max-width: 380px; width: 100%;
+    text-align: center; position: relative; overflow: hidden;
+  }
+  .modal::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, #023e6e, #0096c7, #023e6e);
+  }
+  .modal-icon { font-size: 32px; margin-bottom: 14px; }
+  .modal h2 { font-size: 16px; font-weight: 600; margin-bottom: 8px; color: var(--text); }
+  .modal p { font-size: 13px; color: var(--text-muted); line-height: 1.65; margin-bottom: 6px; }
+  .modal .hint {
+    font-size: 11px; color: var(--text-muted); margin: 14px 0 20px;
+    padding: 10px 14px; background: var(--surface2);
+    border: 1px solid var(--border); border-radius: var(--radius-sm); line-height: 1.6; text-align: left;
+  }
+  .btn-google {
+    width: 100%; height: 44px; border-radius: var(--radius-sm);
+    border: 1px solid var(--border-mid); background: var(--surface);
+    font-size: 13px; font-weight: 600; font-family: var(--sans);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    gap: 10px; transition: border-color .15s, background .15s;
+    color: var(--text); margin-bottom: 10px; box-shadow: var(--shadow);
+  }
+  .btn-google:hover { border-color: var(--accent); background: var(--accent-light); }
+  .btn-google svg { flex-shrink: 0; }
+  .btn-skip {
+    width: 100%; height: 36px; border: none; background: none;
+    font-size: 12px; color: var(--text-hint); cursor: pointer;
+    font-family: var(--sans); text-decoration: underline;
+  }
+  .btn-skip:hover { color: var(--text-muted); }
+
+  /* ── User pill ── */
+  .user-pill {
+    display: flex; align-items: center; gap: 7px;
+    background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 20px; padding: 4px 12px 4px 5px;
+    font-size: 12px; color: #fff; cursor: pointer; transition: all .15s; flex-shrink: 0;
+  }
+  .user-pill:hover { background: rgba(255,255,255,0.28); }
+  .user-avatar {
+    width: 24px; height: 24px; border-radius: 50%;
+    background: rgba(255,255,255,0.25); border: 1px solid rgba(255,255,255,0.3);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; color: #fff; overflow: hidden; flex-shrink: 0;
+  }
+  .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+  .hidden { display: none !important; }
+
+  footer {
+    margin-top: 48px; text-align: center;
+    font-size: 11px; color: var(--text-hint); padding: 0 16px; line-height: 1.8;
+    font-family: var(--mono);
+  }
+</style>
+</head>
+<body>
+
+<!-- Auth Modal -->
+<div class="modal-backdrop hidden" id="auth-modal">
+  <div class="modal">
+    <div class="modal-icon">🔖</div>
+    <h2 id="modal-title">保存并随时查看对比方案</h2>
+    <p id="modal-desc">登录后，您的对比数据将同步到云端，换设备也能继续查看。</p>
+    <div class="hint" id="modal-hint">⚠️ 不登录也可以保存，但数据仅存在当前浏览器。清除缓存或换设备后将无法找回。</div>
+    <button class="btn-google" onclick="signInWithGoogle()">
+      <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z"/></svg>
+      <span id="modal-btn-google">使用 Google 账号登录</span>
+    </button>
+    <button class="btn-skip" onclick="skipLogin()" id="modal-btn-skip">暂不登录，仅保存到本设备</button>
+  </div>
+</div>
+
+<header>
+  <div class="header-badge">
+    <div class="header-icon">🏙</div>
+    <div>
+      <h1 id="h-title">楼花转让计算器</h1>
+      <p id="h-sub">加拿大半年复利标准 · 实时计算 · 多方案对比</p>
+    </div>
+  </div>
+  <div class="header-controls">
+    <button class="lang-toggle" onclick="toggleLang()">English</button>
+    <div class="user-pill hidden" id="user-pill" onclick="signOut()">
+      <div class="user-avatar" id="user-avatar"></div>
+      <span id="user-name"></span>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="card">
+    <div class="card-title" id="t-property">房产信息</div>
+    <div class="grid-2" style="margin-bottom:12px">
+      <div class="field">
+        <label id="l-siez">面积 (sqft)</label>
+        <input type="number" id="siez" placeholder="e.g. 460" min="0">
+      </div>
+      <div class="field">
+        <label id="l-dpaid">已付定金比例</label>
+        <select id="dpaid">
+          <option value="0.15">15%</option>
+          <option value="0.20" selected>20%</option>
+          <option value="0.25">25%</option>
+          <option value="0.30">30%</option>
+          <option value="0.35">35%</option>
+        </select>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="field">
+        <label id="l-orig">原价（万）</label>
+        <input type="number" id="orig" placeholder="e.g. 54.8" step="0.01" min="0">
+      </div>
+      <div class="field">
+        <label id="l-sell">卖价（万）</label>
+        <input type="number" id="sell" placeholder="e.g. 39.9" step="0.01" min="0">
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title" id="t-loan">贷款参数</div>
+    <div class="grid-2">
+      <div class="field">
+        <label id="l-rate">年利率（%）</label>
+        <input type="number" id="rate" value="3.95" step="0.01" min="0.01" max="20">
+      </div>
+      <div class="field">
+        <label id="l-term">贷款年限（年）</label>
+        <input type="number" id="term" value="25" step="1" min="1" max="30">
+      </div>
+    </div>
+    <div class="loan-params">
+      <span id="p-rate-label">年利率</span> <strong id="p-rate">3.95%</strong>
+      <span class="sep">·</span>
+      <span id="p-term-label">贷款</span> <strong id="p-term">25</strong> <span id="p-term-unit">年</span>
+      <span class="sep">·</span>
+      <span id="p-mr-label">月利率</span> <strong id="p-monthly-rate">—</strong>
+    </div>
+  </div>
+
+  <div id="summary-section">
+    <div class="card">
+      <div class="card-title" id="t-overview">概览</div>
+      <div class="summary-grid">
+        <div class="stat"><div class="stat-label" id="s-psf">现在每尺价格</div><div class="stat-val" id="m-psf">—</div></div>
+        <div class="stat"><div class="stat-label" id="s-dep">已付定金金额</div><div class="stat-val" id="m-dep">—</div></div>
+        <div class="stat"><div class="stat-label" id="s-bal">还要付给开发商</div><div class="stat-val" id="m-bal">—</div></div>
+        <div class="stat"><div class="stat-label" id="s-reb">卖家还需付买家</div><div class="stat-val" id="m-reb">—</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="results">
+    <div class="section-head">
+      <h2 id="sh-new">按新价首付</h2><span class="tag tag-blue" id="sh-new-tag">贷款基于卖价</span>
+    </div>
+    <div class="scenario-grid" id="new-scenarios"></div>
+    <div class="section-head">
+      <h2 id="sh-orig">按原价首付</h2><span class="tag tag-amber" id="sh-orig-tag">贷款基于原价</span>
+    </div>
+    <div class="scenario-grid" id="orig-scenarios"></div>
+  </div>
+
+  <div id="save-bar-wrap">
+    <div class="save-bar">
+      <input type="text" id="save-label" placeholder="备注名称（如：西向460sqft）" maxlength="40">
+      <button class="btn-save" id="btn-save" onclick="saveRecord()">+ 保存对比</button>
+    </div>
+    <div class="status-bar"><span class="dot" id="db-dot"></span><span id="db-status"></span></div>
+  </div>
+
+  <div id="compare-section">
+    <div class="section-head" style="margin-top:8px">
+      <h2 id="t-saved">已保存方案对比</h2>
+      <span id="record-count" style="font-size:11px;color:var(--text-hint)"></span>
+    </div>
+    <div class="compare-wrap">
+      <table class="compare-table" id="compare-table">
+        <thead><tr id="table-head"></tr></thead>
+        <tbody id="compare-body"></tbody>
+      </table>
+    </div>
+    <div style="margin-top:10px;text-align:right">
+      <button onclick="clearAll()" id="btn-clear" style="font-size:11px;color:var(--text-hint);background:none;border:none;cursor:pointer;text-decoration:underline;font-family:var(--sans)">清空所有方案</button>
+    </div>
+  </div>
+
+  <footer>
+    <p id="f1">计算采用加拿大抵押贷款标准（半年复利），结果仅供参考。</p>
+    <p style="margin-top:4px" id="f2">月利率 = (1 + 年利率 ÷ 2)<sup>1/6</sup> − 1</p>
+  </footer>
+</div>
+
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, orderBy, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getAuth, GoogleAuthProvider, signInWithPopup, signOut as fbSignOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAghyjSB7ZnuEMr2Sw0BkrJOlWdPwdSymQ",
+    authDomain: "assignment-calculator-686a5.firebaseapp.com",
+    projectId: "assignment-calculator-686a5",
+    storageBucket: "assignment-calculator-686a5.firebasestorage.app",
+    messagingSenderId: "566326625176",
+    appId: "1:566326625176:web:27c955d7302bcc1d6f61ed"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+  const provider = new GoogleAuthProvider();
+  const COL = "records";
+
+  window._db = db;
+  window._col = COL;
+  window._fs = { collection, addDoc, getDocs, deleteDoc, doc, query, orderBy, where };
+  window._auth = auth;
+  window._currentUser = null;
+
+  window._signInWithGoogle = async () => {
+    try {
+      await signInWithPopup(auth, provider);
+    } catch(e) {
+      console.error(e);
+      alert('登录失败，请重试');
+    }
+  };
+
+  window._signOut = async () => {
+    await fbSignOut(auth);
+  };
+
+  onAuthStateChanged(auth, (user) => {
+    window._currentUser = user;
+    if (typeof window.onAuthChanged === 'function') window.onAuthChanged(user);
+  });
+
+  window._firebaseReady = true;
+  if (window._pendingSignIn) {
+    window._pendingSignIn = false;
+    window._signInWithGoogle();
+  }
+</script>
+
+<script>
+// ── i18n ──────────────────────────────────────────────────────────────────
+const T = {
+  zh: {
+    title: '楼花转让计算器',
+    sub: '加拿大半年复利标准 · 实时计算 · 多方案对比',
+    langBtn: 'English',
+    tProperty: '房产信息', tLoan: '贷款参数', tOverview: '概览',
+    lSiez: '面积 (sqft)', lDpaid: '已付定金比例',
+    lOrig: '原价（万）', lSell: '卖价（万）',
+    lRate: '年利率（%）', lTerm: '贷款年限（年）',
+    pRateLabel: '年利率', pTermLabel: '贷款', pTermUnit: '年', pMrLabel: '月利率',
+    sPsf: '现在每尺价格', sDep: '已付定金金额', sBal: '还要付给开发商', sReb: '卖家还需付买家',
+    shNew: '按新价首付', shNewTag: '贷款基于卖价',
+    shOrig: '按原价首付', shOrigTag: '贷款基于原价',
+    scLabels: ['按新价首付 35%','按新价首付 20%','按原价首付 35%','按原价首付 20%'],
+    rowLoan: '贷款金额', rowMonthly: '月供', rowPrincipal: '其中本金', rowBuyer: '买家实际支付',
+    savePlaceholder: '备注名称（如：西向460sqft）',
+    btnSave: '+ 保存对比',
+    tSaved: '已保存方案对比',
+    btnClear: '清空所有方案',
+    f1: '计算采用加拿大抵押贷款标准（半年复利），结果仅供参考。',
+    f2: '月利率 = (1 + 年利率 ÷ 2)<sup>1/6</sup> − 1',
+    thLabels: ['备注','面积','原价','卖价','每尺价','定金比','已付定金','卖家需付','利率/年限',
+               '新价35%月供','新价35%买家付','新价20%月供','新价20%买家付',
+               '原价35%月供','原价35%买家付','原价20%月供','原价20%买家付',''],
+    dbSaving: '保存中...', dbSaved: '已保存到云端 ☁️', dbErr: '保存失败，请重试',
+    dbLoading: '加载中...', dbLoaded: '已从云端加载',
+    dbSavedLocal: '已保存到本设备（登录后可同步到云端）',
+    emptyCompare: '暂无保存的方案，计算后点击「保存对比」添加',
+    autoLabel: (r) => `$${r.orig}万→$${r.sell}万 (${(r.dpRate*100).toFixed(0)}%定金)`,
+    records: (n) => `共 ${n} 条`,
+    confirmClear: '确定清空所有保存的方案？',
+    modalTitle: '保存并随时查看对比方案',
+    modalDesc: '登录后，您的对比数据将同步到云端，换设备也能继续查看。',
+    modalHint: '⚠️ 不登录也可以保存，但数据仅存在当前浏览器。清除缓存或换设备后将无法找回。',
+    modalBtnGoogle: '使用 Google 账号登录',
+    modalBtnSkip: '暂不登录，仅保存到本设备',
+    signOut: '退出登录',
+  },
+  en: {
+    title: 'Pre-construction Assignment Calculator',
+    sub: 'Canadian semi-annual compounding · Real-time · Multi-scenario',
+    langBtn: '中文',
+    tProperty: 'Property Info', tLoan: 'Loan Parameters', tOverview: 'Summary',
+    lSiez: 'Size (sqft)', lDpaid: 'Deposit paid',
+    lOrig: 'Original price ($10k)', lSell: 'Assignment price ($10k)',
+    lRate: 'Annual rate (%)', lTerm: 'Amortization (yrs)',
+    pRateLabel: 'Rate', pTermLabel: '', pTermUnit: 'yr amort.', pMrLabel: 'Monthly rate',
+    sPsf: 'Price per sqft', sDep: 'Deposit paid', sBal: 'Balance to developer', sReb: 'Seller pays buyer',
+    shNew: 'New price down payment', shNewTag: 'Loan based on assignment price',
+    shOrig: 'Original price down payment', shOrigTag: 'Loan based on original price',
+    scLabels: ['New price 35% down','New price 20% down','Original price 35% down','Original price 20% down'],
+    rowLoan: 'Loan amount', rowMonthly: 'Monthly payment', rowPrincipal: 'Principal portion', rowBuyer: "Buyer's net payment",
+    savePlaceholder: 'Label (e.g. West-facing 460sqft)',
+    btnSave: '+ Save to compare',
+    tSaved: 'Saved scenarios',
+    btnClear: 'Clear all',
+    f1: 'Calculations use Canadian mortgage standard (semi-annual compounding). For reference only.',
+    f2: 'Monthly rate = (1 + annual rate ÷ 2)<sup>1/6</sup> − 1',
+    thLabels: ['Label','Size','Orig price','Assign price','$/sqft','Deposit %','Deposit paid','Seller pays',
+               'Rate / Term','New 35% pmt','New 35% buyer','New 20% pmt','New 20% buyer',
+               'Orig 35% pmt','Orig 35% buyer','Orig 20% pmt','Orig 20% buyer',''],
+    dbSaving: 'Saving...', dbSaved: 'Saved to cloud ☁️', dbErr: 'Save failed, please retry',
+    dbLoading: 'Loading...', dbLoaded: 'Loaded from cloud',
+    dbSavedLocal: 'Saved to this device (sign in to sync to cloud)',
+    emptyCompare: 'No saved scenarios yet. Calculate and click "Save to compare".',
+    autoLabel: (r) => `$${r.orig}→$${r.sell} (${(r.dpRate*100).toFixed(0)}% dep)`,
+    records: (n) => `${n} record${n===1?'':'s'}`,
+    confirmClear: 'Clear all saved scenarios?',
+    modalTitle: 'Save & access your comparisons anywhere',
+    modalDesc: 'Sign in to sync your data to the cloud — view it on any device, any time.',
+    modalHint: '⚠️ You can save without signing in, but data is stored only in this browser. It will be lost if you clear your cache or switch devices.',
+    modalBtnGoogle: 'Continue with Google',
+    modalBtnSkip: 'Skip for now — save to this device only',
+    signOut: 'Sign out',
+  }
+};
+
+let lang = 'zh';
+let records = [];
+let lastCalc = null;
+
+function t(key) { return T[lang][key]; }
+
+function toggleLang() {
+  lang = lang === 'zh' ? 'en' : 'zh';
+  applyLang();
+  applyModalLang();
+  calc();
+  renderTable();
+}
+
+function applyLang() {
+  const L = T[lang];
+  document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
+  document.title = L.title + (lang === 'zh' ? ' | Assignment Calculator' : ' | 楼花转让计算器');
+  document.querySelector('.lang-toggle').textContent = L.langBtn;
+  document.getElementById('h-title').textContent = L.title;
+  document.getElementById('h-sub').textContent = L.sub;
+  document.getElementById('t-property').textContent = L.tProperty;
+  document.getElementById('t-loan').textContent = L.tLoan;
+  document.getElementById('t-overview').textContent = L.tOverview;
+  document.getElementById('l-siez').textContent = L.lSiez;
+  document.getElementById('l-dpaid').textContent = L.lDpaid;
+  document.getElementById('l-orig').textContent = L.lOrig;
+  document.getElementById('l-sell').textContent = L.lSell;
+  document.getElementById('l-rate').textContent = L.lRate;
+  document.getElementById('l-term').textContent = L.lTerm;
+  document.getElementById('p-rate-label').textContent = L.pRateLabel;
+  document.getElementById('p-term-label').textContent = L.pTermLabel;
+  document.getElementById('p-term-unit').textContent = L.pTermUnit;
+  document.getElementById('p-mr-label').textContent = L.pMrLabel;
+  document.getElementById('s-psf').textContent = L.sPsf;
+  document.getElementById('s-dep').textContent = L.sDep;
+  document.getElementById('s-bal').textContent = L.sBal;
+  document.getElementById('s-reb').textContent = L.sReb;
+  document.getElementById('sh-new').textContent = L.shNew;
+  document.getElementById('sh-new-tag').textContent = L.shNewTag;
+  document.getElementById('sh-orig').textContent = L.shOrig;
+  document.getElementById('sh-orig-tag').textContent = L.shOrigTag;
+  document.getElementById('save-label').placeholder = L.savePlaceholder;
+  document.getElementById('btn-save').textContent = L.btnSave;
+  document.getElementById('t-saved').textContent = L.tSaved;
+  document.getElementById('btn-clear').textContent = L.btnClear;
+  document.getElementById('f1').textContent = L.f1;
+  document.getElementById('f2').innerHTML = L.f2;
+  renderTableHead();
+}
+
+// ── Calc ──────────────────────────────────────────────────────────────────
+const inputIds = ['siez','orig','sell','dpaid','rate','term'];
+inputIds.forEach(id => document.getElementById(id).addEventListener('input', calc));
+
+function pmtCalc(loan_wan, annualRate, years) {
+  const rate = Math.pow(1 + annualRate / 2, 1/6) - 1;
+  const n = years * 12;
+  const P = loan_wan * 10000;
+  if (P <= 0 || n <= 0) return { monthly: 0, principal: 0 };
+  const m = P * rate / (1 - Math.pow(1 + rate, -n));
+  return { monthly: Math.round(m), principal: Math.round(m - P * rate) };
+}
+
+function fmtW(v, dec=2) {
+  const s = v < 0 ? '-' : '';
+  return s + '$' + Math.abs(v).toFixed(dec) + (lang === 'zh' ? '万' : '0k');
+}
+
+function calc() {
+  const siez = parseFloat(document.getElementById('siez').value) || 0;
+  const orig = parseFloat(document.getElementById('orig').value) || 0;
+  const sell = parseFloat(document.getElementById('sell').value) || 0;
+  const dpRate = parseFloat(document.getElementById('dpaid').value);
+  const annualRate = parseFloat(document.getElementById('rate').value) / 100 || 0.0395;
+  const years = parseFloat(document.getElementById('term').value) || 25;
+
+  const monthlyRate = (Math.pow(1 + annualRate / 2, 1/6) - 1) * 100;
+  document.getElementById('p-rate').textContent = (annualRate * 100).toFixed(2) + '%';
+  document.getElementById('p-term').textContent = years;
+  document.getElementById('p-monthly-rate').textContent = monthlyRate.toFixed(4) + '%';
+
+  if (!sell || !orig) {
+    document.getElementById('summary-section').style.display = 'none';
+    document.getElementById('results').style.display = 'none';
+    document.getElementById('save-bar-wrap').style.display = 'none';
+    lastCalc = null;
+    return;
+  }
+
+  const H = orig * dpRate;
+  const I = orig - H;
+  const J = orig - sell - H;
+  const psf = siez ? sell * 10000 / siez : 0;
+
+  document.getElementById('m-psf').textContent = siez ? '$' + psf.toFixed(0) + '/sqft' : '—';
+  document.getElementById('m-dep').textContent = fmtW(H);
+  document.getElementById('m-bal').textContent = fmtW(I);
+  const rebEl = document.getElementById('m-reb');
+  rebEl.textContent = fmtW(J);
+  rebEl.className = 'stat-val' + (J < 0 ? ' neg' : '');
+  document.getElementById('summary-section').style.display = 'block';
+
+  const scLabels = t('scLabels');
+  const scenarios = [
+    { label: scLabels[0], loan: sell*0.65, buyerVal: sell*0.35, buyerDec: 0 },
+    { label: scLabels[1], loan: sell*0.80, buyerVal: sell*0.20, buyerDec: 0 },
+    { label: scLabels[2], loan: orig*0.65, buyerVal: sell-orig*0.65, buyerDec: 2 },
+    { label: scLabels[3], loan: orig*0.80, buyerVal: sell-orig*0.80, buyerDec: 2 },
+  ];
+
+  const scData = {};
+  const keys = ['n35','n20','o35','o20'];
+  scenarios.forEach((s, i) => {
+    const { monthly, principal } = pmtCalc(s.loan, annualRate, years);
+    scData[keys[i]] = { ...s, monthly, principal };
+  });
+
+  function cardHtml(sc) {
+    const bCls = sc.buyerVal < 0 ? 'neg' : sc.buyerVal > 0 ? 'pos' : '';
+    return `<div class="scenario-card">
+      <h3>${sc.label}</h3>
+      <div class="row"><span class="row-key">${t('rowLoan')}</span><span class="row-val">${fmtW(sc.loan)}</span></div>
+      <div class="row"><span class="row-key">${t('rowMonthly')}</span><span class="row-val">$${sc.monthly.toLocaleString()}</span></div>
+      <div class="row"><span class="row-key">${t('rowPrincipal')}</span><span class="row-val">$${sc.principal.toLocaleString()}</span></div>
+      <div class="row"><span class="row-key">${t('rowBuyer')}</span><span class="row-val big ${bCls}">${fmtW(sc.buyerVal, sc.buyerDec)}</span></div>
+    </div>`;
+  }
+
+  document.getElementById('new-scenarios').innerHTML = [scData.n35, scData.n20].map(cardHtml).join('');
+  document.getElementById('orig-scenarios').innerHTML = [scData.o35, scData.o20].map(cardHtml).join('');
+  document.getElementById('results').style.display = 'block';
+  document.getElementById('save-bar-wrap').style.display = 'block';
+
+  lastCalc = { siez, orig, sell, dpRate, annualRate, years, H, J, psf, scData };
+}
+
+// ── Auth ──────────────────────────────────────────────────────────────────
+let currentUser = null;
+let pendingSave = false;
+
+window.onAuthChanged = function(user) {
+  currentUser = user;
+  const pill = document.getElementById('user-pill');
+  const avatar = document.getElementById('user-avatar');
+  const nameEl = document.getElementById('user-name');
+  if (user) {
+    pill.classList.remove('hidden');
+    nameEl.textContent = user.displayName ? user.displayName.split(' ')[0] : user.email;
+    if (user.photoURL) {
+      avatar.innerHTML = `<img src="${user.photoURL}" alt="">`;
+    } else {
+      avatar.textContent = (user.displayName || user.email || '?')[0].toUpperCase();
+    }
+    // If user just signed in and had a pending save, complete it
+    if (pendingSave) {
+      pendingSave = false;
+      document.getElementById('auth-modal').classList.add('hidden');
+      doSaveRecord(true);
+    } else {
+      // Load their cloud records
+      loadRecords();
+    }
+  } else {
+    pill.classList.add('hidden');
+    avatar.innerHTML = '';
+    nameEl.textContent = '';
+    // Load local records when signed out
+    loadLocalRecords();
+  }
+};
+
+function signInWithGoogle() {
+  pendingSave = true;
+  if (typeof window._signInWithGoogle === 'function') {
+    window._signInWithGoogle();
+  } else {
+    window._pendingSignIn = true;
+  }
+}
+
+function skipLogin() {
+  document.getElementById('auth-modal').classList.add('hidden');
+  doSaveRecord(false);
+}
+
+function signOut() {
+  if (!confirm(t('signOut') + '?')) return;
+  records = [];
+  renderTable();
+  document.getElementById('compare-section').style.display = 'none';
+  window._signOut();
+}
+
+// ── Firebase ──────────────────────────────────────────────────────────────
+function setStatus(msg, color='') {
+  const dot = document.getElementById('db-dot');
+  const s = document.getElementById('db-status');
+  s.textContent = msg;
+  dot.className = 'dot' + (color ? ' ' + color : '');
+}
+
+window.loadRecords = async function() {
+  if (!window._db || !currentUser) return;
+  setStatus(t('dbLoading'));
+  try {
+    const { getDocs, collection, query, orderBy, where } = window._fs;
+    const q = query(
+      collection(window._db, window._col),
+      where('uid', '==', currentUser.uid),
+      orderBy('ts', 'asc')
+    );
+    const snap = await getDocs(q);
+    records = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (records.length > 0) {
+      renderTable();
+      document.getElementById('compare-section').style.display = 'block';
+    }
+    setStatus(t('dbLoaded'), 'green');
+    setTimeout(() => setStatus(''), 3000);
+  } catch(e) {
+    setStatus('⚠ ' + e.message, 'red');
+  }
+};
+
+function loadLocalRecords() {
+  const local = JSON.parse(localStorage.getItem('mortgage_records_local') || '[]');
+  records = local;
+  if (records.length > 0) {
+    renderTable();
+    document.getElementById('compare-section').style.display = 'block';
+  }
+}
+
+function saveRecord() {
+  if (!lastCalc) return;
+  if (!currentUser) {
+    // Show auth modal
+    applyModalLang();
+    document.getElementById('auth-modal').classList.remove('hidden');
+  } else {
+    doSaveRecord(true);
+  }
+}
+
+async function doSaveRecord(toCloud) {
+  if (!lastCalc) return;
+  const label = document.getElementById('save-label').value.trim() || t('autoLabel')(lastCalc);
+  setStatus(t('dbSaving'));
+  const payload = {
+    label, ts: Date.now(),
+    uid: currentUser ? currentUser.uid : 'local',
+    ...lastCalc,
+    scData: {
+      n35: { monthly: lastCalc.scData.n35.monthly, principal: lastCalc.scData.n35.principal, buyerVal: lastCalc.scData.n35.buyerVal, loan: lastCalc.scData.n35.loan },
+      n20: { monthly: lastCalc.scData.n20.monthly, principal: lastCalc.scData.n20.principal, buyerVal: lastCalc.scData.n20.buyerVal, loan: lastCalc.scData.n20.loan },
+      o35: { monthly: lastCalc.scData.o35.monthly, principal: lastCalc.scData.o35.principal, buyerVal: lastCalc.scData.o35.buyerVal, loan: lastCalc.scData.o35.loan },
+      o20: { monthly: lastCalc.scData.o20.monthly, principal: lastCalc.scData.o20.principal, buyerVal: lastCalc.scData.o20.buyerVal, loan: lastCalc.scData.o20.loan },
+    }
+  };
+
+  if (toCloud && currentUser && window._db) {
+    try {
+      const { addDoc, collection } = window._fs;
+      const ref = await addDoc(collection(window._db, window._col), payload);
+      records.push({ id: ref.id, ...payload });
+      setStatus(t('dbSaved'), 'green');
+    } catch(e) {
+      setStatus(t('dbErr'), 'red');
+      return;
+    }
+  } else {
+    // Save to localStorage
+    const local = JSON.parse(localStorage.getItem('mortgage_records_local') || '[]');
+    const rec = { id: 'local_' + Date.now(), ...payload };
+    local.push(rec);
+    localStorage.setItem('mortgage_records_local', JSON.stringify(local));
+    records.push(rec);
+    setStatus(t('dbSavedLocal'), 'green');
+  }
+
+  renderTable();
+  document.getElementById('compare-section').style.display = 'block';
+  document.getElementById('save-label').value = '';
+  setTimeout(() => setStatus(''), 4000);
+}
+
+async function deleteRecord(id) {
+  try {
+    if (id.startsWith('local_')) {
+      const local = JSON.parse(localStorage.getItem('mortgage_records_local') || '[]');
+      localStorage.setItem('mortgage_records_local', JSON.stringify(local.filter(r => r.id !== id)));
+    } else if (window._db) {
+      const { deleteDoc, doc } = window._fs;
+      await deleteDoc(doc(window._db, window._col, id));
+    }
+    records = records.filter(r => r.id !== id);
+    renderTable();
+    if (records.length === 0) document.getElementById('compare-section').style.display = 'none';
+  } catch(e) { alert('Delete failed: ' + e.message); }
+}
+
+async function clearAll() {
+  if (!confirm(t('confirmClear'))) return;
+  try {
+    const cloudIds = records.filter(r => !r.id.startsWith('local_'));
+    const localIds = records.filter(r => r.id.startsWith('local_'));
+    if (cloudIds.length && window._db) {
+      const { deleteDoc, doc } = window._fs;
+      await Promise.all(cloudIds.map(r => deleteDoc(doc(window._db, window._col, r.id))));
+    }
+    if (localIds.length) localStorage.removeItem('mortgage_records_local');
+    records = [];
+    renderTable();
+    document.getElementById('compare-section').style.display = 'none';
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+function applyModalLang() {
+  document.getElementById('modal-title').textContent = t('modalTitle');
+  document.getElementById('modal-desc').textContent = t('modalDesc');
+  document.getElementById('modal-hint').textContent = t('modalHint');
+  document.getElementById('modal-btn-google').textContent = t('modalBtnGoogle');
+  document.getElementById('modal-btn-skip').textContent = t('modalBtnSkip');
+}
+
+// ── Table ──────────────────────────────────────────────────────────────────
+function renderTableHead() {
+  const ths = t('thLabels');
+  document.getElementById('table-head').innerHTML = ths.map(h => `<th>${h}</th>`).join('');
+}
+
+function fmtTd(v, dec=2, isInt=false) {
+  const s = v < 0 ? '-' : '';
+  const unit = lang === 'zh' ? '万' : '0k';
+  const str = isInt ? Math.abs(v).toFixed(0) : Math.abs(v).toFixed(dec);
+  const cls = v < 0 ? ' class="neg"' : v > 0 ? ' class="pos"' : '';
+  return `<td${cls}>${s}$${str}${unit}</td>`;
+}
+
+function renderTable() {
+  renderTableHead();
+  const tbody = document.getElementById('compare-body');
+  document.getElementById('record-count').textContent = t('records')(records.length);
+  if (records.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="18" class="empty-compare">${t('emptyCompare')}</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = records.map(r => {
+    const psfStr = r.siez ? '$' + r.psf.toFixed(0) + '/sqft' : '—';
+    const n35=r.scData.n35, n20=r.scData.n20, o35=r.scData.o35, o20=r.scData.o20;
+    return `<tr>
+      <td class="label-col">${r.label}</td>
+      <td>${r.siez||'—'} sqft</td>
+      <td>$${r.orig}万</td>
+      <td>$${r.sell}万</td>
+      <td>${psfStr}</td>
+      <td>${(r.dpRate*100).toFixed(0)}%</td>
+      ${fmtTd(r.H)}
+      ${fmtTd(r.J)}
+      <td>${(r.annualRate*100).toFixed(2)}% / ${r.years}yr</td>
+      <td>$${n35.monthly.toLocaleString()}</td>
+      ${fmtTd(n35.buyerVal,0,true)}
+      <td>$${n20.monthly.toLocaleString()}</td>
+      ${fmtTd(n20.buyerVal,0,true)}
+      <td>$${o35.monthly.toLocaleString()}</td>
+      ${fmtTd(o35.buyerVal)}
+      <td>$${o20.monthly.toLocaleString()}</td>
+      ${fmtTd(o20.buyerVal)}
+      <td><button class="btn-del" onclick="deleteRecord('${r.id}')" title="Delete">✕</button></td>
+    </tr>`;
+  }).join('');
+}
+
+applyLang();
+applyModalLang();
+calc();
+</script>
+</body>
+</html>
