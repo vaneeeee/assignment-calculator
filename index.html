@@ -92,8 +92,29 @@
   }
   .card-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
-  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  @media(max-width: 500px) { .grid-2 { grid-template-columns: 1fr; } }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  @media(max-width: 600px) {
+    .container { padding: 0 10px; }
+    .card { padding: 14px 12px; margin-top: 10px; }
+    .card-title { margin-bottom: 10px; }
+    .field input, .field select { height: 36px; font-size: 13px; padding: 0 9px; }
+    .field label { font-size: 10px; }
+    .grid-2 { gap: 8px; }
+    .loan-params { padding: 6px 10px; }
+    .loan-params span, .loan-params strong { font-size: 10px; }
+    .summary-grid { gap: 6px; }
+    .stat { padding: 9px 10px; }
+    .stat-val { font-size: 14px; }
+    .stat-label { font-size: 9px; }
+    .save-bar input { height: 36px; font-size: 12px; }
+    .btn-save { height: 36px; font-size: 12px; padding: 0 13px; }
+    header { padding: 14px 14px 12px; }
+    header h1 { font-size: 15px; }
+    header p { font-size: 10px; }
+    .header-icon { width: 30px; height: 30px; font-size: 15px; }
+    .lang-toggle { padding: 4px 10px; font-size: 11px; }
+  }
 
   .field { display: flex; flex-direction: column; gap: 5px; }
   .field label { font-size: 11px; color: var(--text-muted); font-weight: 500; letter-spacing: 0.03em; }
@@ -347,7 +368,7 @@
 
   <div class="card">
     <div class="card-title" id="t-property">房产信息</div>
-    <div class="grid-2" style="margin-bottom:12px">
+    <div class="grid-2">
       <div class="field">
         <label id="l-siez">面积 (sqft)</label>
         <input type="number" id="siez" placeholder="e.g. 460" min="0">
